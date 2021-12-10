@@ -14,7 +14,7 @@ Class ConsoleTable  'Defining the Class
 	    'Initalization code goes here
         VerticalMark   = "|"
         HorizontalMark = "-"
-        intSpacingMode = 2 ' 0=left 1=center 2=rigth
+        intSpacingMode = 1 ' 0=left 1=center 2=rigth
         ShowInnerBorders = True
         Set objDic = WScript.CreateObject("Scripting.Dictionary")
     End Sub
@@ -36,6 +36,21 @@ Class ConsoleTable  'Defining the Class
     Sub SetHeaders(strHeaders)
         strHeads = strHeaders
         UpdateWidths(strHeaders)
+    End Sub
+
+    Sub SetSpacingMode(intMode)
+        Select Case CInt(intMode)
+            Case 1
+                intSpacingMode = 1
+            Case 2
+                intSpacingMode = 2
+            Case Else
+                intSpacingMode = 0
+        End Select
+    End Sub
+
+    Sub DisableBorders
+        ShowInnerBorders = False
     End Sub
 
     Private Sub UpdateWidths(strNewRowContent)      
@@ -84,7 +99,7 @@ Class ConsoleTable  'Defining the Class
     End Sub
 
     Sub AddRow(strRowContent)
-        objDic.Add objDic.Count, strRowContent
+        objDic.Add objDic.Count, Trim( strRowContent )
         UpdateWidths(strRowContent)
     End Sub
 
@@ -176,13 +191,15 @@ End Class
 Dim objTable
 Set objTable = New ConsoleTable
 
-objTable.SetHeaders("Numero,Pais,Fondos")
-objTable.AddRow("1,Cuba,1000")
-objTable.AddRow("2,Rusia,10000")
-objTable.AddRow("3,Estados Unidos,1000000")
-objTable.AddRow("4,Brasil")
-objTable.AddRow("5,China, 9999999999999")
-objTable.AddRow("6, EU , 7777777, qwerty")
-objTable.AddRow("7, Portugal , 333x7777777, qwerty")
-objTable.Write
-
+With objTable
+    .SetHeaders("Numero,Pais,Fondos")
+    .DisableBorders
+    .AddRow("1,Cuba,1000")
+    .AddRow("2,Rusia,10000")
+    .AddRow("3,Estados Unidos,1000000")
+    .AddRow("4,Brasil")
+    .AddRow("5,China, 9999999999999")
+    .AddRow("6, EU , 7777777, qwerty")
+    .AddRow("7, Portugal , 333x7777777, qwerty")
+    .Write
+End With
