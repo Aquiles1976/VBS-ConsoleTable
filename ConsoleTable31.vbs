@@ -2,6 +2,7 @@ Option Explicit
 
 Class ConsoleTable  'Defining the Class
 
+    Private intConsoleWidth ' The width of the actual console window
     Private strSeparator'This is a special character to delimit table cells
     Private strHeads    'This specifies the head of each column
     Private strWidths   'This specifies the len of each cell
@@ -13,6 +14,7 @@ Class ConsoleTable  'Defining the Class
       
     
     Private Sub Class_Initialize( )
+        intConsoleWidth = 80
         strSeparator = "|"
         strHeads     = "n" & strSeparator & "Items"
         strWidths    = "-" & strSeparator & "-----"
@@ -64,10 +66,19 @@ Class ConsoleTable  'Defining the Class
     Private Sub PrintRow(strInput3)
         Dim tmpArray3
             tmpArray3 = Split(strInput3,strSeparator)
+        Dim strNewRow
         For intCol = 0 to UBound(tmpArray3)
-            WScript.StdOut.Write GetSpacedCell(tmpArray3(intCol),intCol) & " "
+            If intCol = 0 Then
+                strNewRow = GetSpacedCell(tmpArray3(intCol),intCol) + " "
+            Else
+                strNewRow = strNewRow + GetSpacedCell(tmpArray3(intCol),intCol) + " "
+            End If
+            If Len(strNewRow) > intConsoleWidth Then
+                strNewRow = Left(strNewRow, intConsoleWidth-3) + "..."
+                Exit For
+            End If
         Next
-        WScript.StdOut.Write vbCrLf
+        WScript.Echo strNewRow
     End Sub
 
     'Method 4
@@ -131,14 +142,6 @@ Class ConsoleTable  'Defining the Class
         Next
     End Sub
 
-    
-
-    
-
-    
-
-    
-
 
     'Public Sub SetCellSpacing(intColumn,intSpacingMode)
         'Validate intSpacingMode
@@ -171,8 +174,8 @@ With objTable
     .AddRow("2|Rusia|10000")
     .AddRow("3|Estados Unidos|1000000")
     .AddRow("4|Brasil")
-    .AddRow("5|China| 9999999999999")
-    .AddRow("6| EU | 7777777| qwerty")
-    .AddRow("7| Portugal | 333x7777777| qwerty")
+    .AddRow("5|China|9999999999999")
+    .AddRow("6|EU|7777777|qwerty")
+    .AddRow("7|Taiwan|El murcielago volaba errante por los cielos hasta que escuchó una voz que lo llamaba desde lejos.")
     .Write
 End With

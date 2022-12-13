@@ -5,13 +5,10 @@ Class ConsoleTable  'Defining the Class
     Private strSeparator'This is a special character to delimit table cells
     Private strHeads    'This specifies the head of each column
     Private strWidths   'This specifies the len of each cell
-    Private strSpacing  'Select 1=Left, 2=Center, 3=Rigth
-    Private intRow      'Integer dedicated to rows 
+    Private strSpacing  'Select 1=Left, 2=Center, 3=Right
     Private intCol      'Integer dedicated to columns
-    'Private ContentArray(1) 'This is the table
-    Private objDic
+    Private objDic      'Dictionary object to store table content
       
-    
     Private Sub Class_Initialize( )
         strSeparator = "|"
         strHeads     = "n" & strSeparator & "Items"
@@ -115,49 +112,39 @@ Class ConsoleTable  'Defining the Class
         Dim tmpArray7 : tmpArray7 = Split(strInput7,strSeparator)
         For intCol = 0 to UBound(tmpArrayWidths)
             If intCol > UBound(tmpArray7) Then Exit For
-            If Len(tmpArray7(intCol)) > len(tmpArrayWidths(intCol)) Then 
+            If Len(Trim(tmpArray7(intCol))) > Len(tmpArrayWidths(intCol)) Then 
                 tmpArrayWidths(intCol) = Trim(tmpArray7(intCol))
             End If
         Next
         strWidths = GetHorizontalRules(Join(tmpArrayWidths,strSeparator)) 
     End Sub
 
+    'Method 8
     Public Sub Write
         Dim objKey
         PrintRow strHeads                       'Print heads
-        PrintRow GetHorizontalRules(strHeads)   'Print horizontal rules
+        PrintRow GetHorizontalRules(strWidths)  'Print horizontal rules
         For Each objKey In objDic               'Explore rows one by one
             PrintRow objDic(objKey)             'Print row
         Next
     End Sub
 
-    
-
-    
-
-    
-
-    
-
-
-    'Public Sub SetCellSpacing(intColumn,intSpacingMode)
-        'Validate intSpacingMode
-    '    If (CInt(intSpacingMode) > 0) AND (CInt(intSpacingMode) < 4) Then
-            'Validate intColumn
-    '        If (CInt(intColumn) => 0) AND (CInt(intColumn) < GetTableCols) Then
-                'Split spacing
-    '            Dim tmpArray
-    '                tmpArray = Split(strSpacing,strSeparator)
-                'Change value
-    '                tmpArray(intColumn) = intSpacingMode
-                'Join spacing
-    '            strSpacing = Join(tmpArray,strSeparator)
-    '        End If
-    '    End If
-    'End Sub
-
-    
-    
+    'Method 9
+    Public Sub SetCellSpacing(intColumn,intSpacingMode)
+       'Validate intSpacingMode
+        If (CInt(intSpacingMode) > 0) AND (CInt(intSpacingMode) < 4) Then
+           'Validate intColumn
+            If (CInt(intColumn) => 0) AND (CInt(intColumn) < GetTableCols) Then
+               'Split spacing
+                Dim tmpArray
+                    tmpArray = Split(strSpacing,strSeparator)
+               'Change value
+                    tmpArray(intColumn) = CInt(intSpacingMode) 
+               'Join spacing
+                strSpacing = Join(tmpArray,strSeparator)
+            End If
+        End If
+    End Sub
 
 End Class
 
@@ -174,5 +161,9 @@ With objTable
     .AddRow("5|China| 9999999999999")
     .AddRow("6| EU | 7777777| qwerty")
     .AddRow("7| Portugal | 333x7777777| qwerty")
+    .Write
+    .SetCellSpacing 0,2
+    .SetCellSpacing 2,3
+    WScript.Echo
     .Write
 End With

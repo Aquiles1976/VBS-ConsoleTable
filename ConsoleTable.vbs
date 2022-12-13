@@ -2,35 +2,22 @@ Option Explicit
 
 Class ConsoleTable  'Defining the Class
 
-    Private VerticalMark
-    Private HorizontalMark 
     Private objDic
     Private strHeads
     Private strWidths
-    Private intSpacingMode
-    Private ShowInnerBorders
+    Private strSpacing
+    Private intIndexer
     
     Private Sub Class_Initialize(  )
-	    'Initalization code goes here
-        VerticalMark   = "|"
-        HorizontalMark = "-"
-        intSpacingMode = 1 ' 0=left 1=center 2=rigth
-        ShowInnerBorders = True
         Set objDic = WScript.CreateObject("Scripting.Dictionary")
     End Sub
 
+    Private Sub Class_Terminate(  )
+        Set objDic = Nothing
+    End Sub
+
     Private Function GetTableWidth()    
-        Dim TableCells
-            TableCells = Split(strWidths,",")
-        Dim intTableWidth
-            intTableWidth = 1
-        If UBound(TableCells) > 0 Then
-            Dim intCol
-            For intCol = 0 to UBound(TableCells)
-                intTableWidth = intTableWidth + Len(TableCells(intCol)) + 1
-            Next
-        End If
-        GetTableWidth = intTableWidth
+        GetTableWidth = Len(strWidths) + 1
     End Function
 
     Sub SetHeaders(strHeaders)
@@ -38,101 +25,73 @@ Class ConsoleTable  'Defining the Class
         UpdateWidths(strHeaders)
     End Sub
 
-    Sub SetSpacingMode(intMode)
-        Select Case CInt(intMode)
-            Case 1
-                intSpacingMode = 1
-            Case 2
-                intSpacingMode = 2
-            Case Else
-                intSpacingMode = 0
-        End Select
-    End Sub
-
-    Sub DisableBorders
-        ShowInnerBorders = False
-    End Sub
-
-    Private Sub UpdateWidths(strNewRowContent)      
-        Dim NewRowArray
-            NewRowArray = Split(strNewRowContent,",")
-
-        Dim WidthsArray 
-            WidthsArray = Split(strWidths, ",")
-
-        Dim intCounter, intNewWidth, intWidth
-
-        If UBound(WidthsArray) > 0 Then
-            If UBound(NewRowArray) => UBound(WidthsArray) Then
-                For intCounter = 0 to UBound(WidthsArray)
-                    intWidth = Len(WidthsArray(intCounter))
-                    intNewWidth = Len(NewRowArray(intCounter))
-                    If intNewWidth > intWidth Then
-                        intWidth = intNewWidth
-                    End If
-                    Select Case intCounter
-                        Case 0
-                            strWidths = String(intWidth,"X") & ","
-                        Case UBound(WidthsArray)
-                            strWidths = strWidths & String(intWidth,"X")
-                        Case Else
-                            strWidths = strWidths & String(intWidth,"X") & ","
-                    End Select
-                Next
-                
-            End if
-        Else    ' The first time
-            For intCounter = 0 to UBound(NewRowArray)
-                intWidth = Len(NewRowArray(intCounter))
-                Select Case intCounter
-                    Case 0
-                        strWidths = String(intWidth,"X") & ","
-                    Case UBound(NewRowArray)
-                        strWidths = strWidths & String(intWidth,"X")
-                    Case Else
-                        strWidths = strWidths & String(intWidth,"X") & ","
-                End Select
-            Next
-        End If
-        
-
-    End Sub
-
-    Sub AddRow(strRowContent)
-        objDic.Add objDic.Count, Trim( strRowContent )
-        UpdateWidths(strRowContent)
-    End Sub
-
-    Private Function GetVerticalBorder
-        If ShowInnerBorders Then
-            GetVerticalBorder = VerticalMark
-        Else
-            GetVerticalBorder = " "
-        End If
+    Private Function FormatInput(strInputRow)   
+        Dim InputRowArray
+            InputRowArray = Split(strInputRow,",")
+        Dim intIndexer, strTmpOutput
+        For intIndexer = 0 to UBound(InputRowArray)
+            strTmpOutput = strTmpOutput & Trim(InputRowArray(intIndexer)) & "," 
+        Next
+        FormatInput = strTmpOutput
     End Function
 
-    Private Sub PrintTableRow(strRowContent)
+    Private Sub UpdateWidths(strNewRowContent)      
+        Dim NewRowArray : NewRowArray = Split(strNewRowContent,",")
+        If UBound(NewRowArray) > 0 Then
+            SetNewWidths NewRowArray
+        End If
+    End Sub
+
+    Private Sub GetNewWidths(NewArray)
         Dim strTemp
-            strTemp = GetVerticalBorder 'Start of Row
+        For intIndexer = 0 to UBound(NewArray)
+            intWidth = Len(strPreviousWidth)
+            intNewWidth = Len(strNewWidth)
+            If intNewWidth > intWidth Then
+                intWidth = intNewWidth
+            End If
+            Select Case intIndexer
+                Case 0
+                    strWidths = String(intWidth,"X") & ","
+                Case UBound(WidthsArray)
+                    strWidths = strWidths & String(intWidth,"X")
+                Case Else
+                    strWidths = strWidths & String(intWidth,"X") & ","
+            End Select
+        Next
+    End Function
+
+    Sub AddRow(strRowContent)
+        Dim strFormated : strFormated = FormatInput(strRowContent)
+        objDic.Add objDic.Count, strFormated
+        UpdateWidths(strFormated)
+    End Sub
+
+    Private Sub WriteRow(strRowContent)
+        Dim strTemp
+        Dim intSpaces
+        Dim intLSpaces
+        Dim intRSpaces
+        Dim strCellContent
         ' Retrieve columns' widths
-        Dim strWidthArray
-            strWidthArray = Split(strWidths, ",")
+        Dim WidthArray
+            WidthArray = Split(strWidths, ",")
         ' Parse content of each cell
-        Dim strContentArray
-            strContentArray = Split(strRowContent, ",")
-        
-        Dim intCol, intSpaces, intLSpaces, intRSpaces, strCellContent
-        If UBound(strWidthArray) > 0 Then
+        Dim ContentArray
+            ContentArray = Split(strRowContent, ",")
+        Dim SpacingArray
+            SpacingArray = Split(strSpacing, ",")
+        If UBound(WidthArray) > 0 Then
             'Loop through the width's array
-            For intCol = 0 to UBound(strWidthArray)
+            For intIndexer = 0 to UBound(WidthArray)
                 ' Get the cell content
-                If intCol > UBound(strContentArray) Then
+                If intIndexer > UBound(ContentArray) Then
                     strCellContent = ""
                 Else
-                    strCellContent = strContentArray(intCol)
+                    strCellContent = ContentArray(intIndexer)
                 End If
                 ' calculate spacing inside each cell
-                intSpaces = Len(strWidthArray(intCol)) - Len(strCellContent)
+                intSpaces = Len(WidthArray(intIndexer)) - Len(strCellContent)
                 Select Case intSpacingMode
                     Case 0 ' Left
                         strTemp = strTemp & strCellContent
@@ -161,7 +120,7 @@ Class ConsoleTable  'Defining the Class
 
         If Len(strHeads) > 0 Then                
             'Print headers
-            PrintTableRow(strHeads)
+            WriteRow(strHeads)
 
             'Print separator
             WScript.Echo(String(GetTableWidth,HorizontalMark))
@@ -171,7 +130,7 @@ Class ConsoleTable  'Defining the Class
             'Print rows
             Dim intRow
             For intRow = 0 to UBound(Items)
-                PrintTableRow(Items(intRow))        
+                WriteRow(Items(intRow))        
             Next
         End If
 
@@ -179,11 +138,7 @@ Class ConsoleTable  'Defining the Class
         WScript.Echo(String(GetTableWidth,HorizontalMark))
     End Sub
 
-    'When Object is Set to Nothing
-    Private Sub Class_Terminate(  )
-        'Termination code goes here
-        Set objDic = Nothing
-    End Sub
+    
 
 End Class
 
@@ -193,7 +148,6 @@ Set objTable = New ConsoleTable
 
 With objTable
     .SetHeaders("Numero,Pais,Fondos")
-    .DisableBorders
     .AddRow("1,Cuba,1000")
     .AddRow("2,Rusia,10000")
     .AddRow("3,Estados Unidos,1000000")

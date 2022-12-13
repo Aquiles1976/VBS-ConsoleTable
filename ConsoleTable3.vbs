@@ -1,7 +1,9 @@
 Option Explicit
-
+  ' Default window size should be 80x25. Table width should not exceed that number.
+  ' If the content of a row is bigger than 80, it should be splitted in more than one row.
 Class ConsoleTable  'Defining the Class
 
+    Private intConsoleWidth ' Width of the actual console window
     Private strSeparator'This is a special character to delimit table cells
     Private strHeads    'This specifies the head of each column
     Private strWidths   'This specifies the len of each cell
@@ -13,6 +15,7 @@ Class ConsoleTable  'Defining the Class
       
     
     Private Sub Class_Initialize( )
+        intConsoleWidth = 80
         strSeparator = "|"
         strHeads     = "n" & strSeparator & "Items"
         strWidths    = "-" & strSeparator & "-----"
@@ -47,8 +50,21 @@ Class ConsoleTable  'Defining the Class
         Dim tmpArray1
             tmpArray1 = Split(strInput1,strSeparator)
         Redim Preserve tmpArray1(GetTableCols-1)
-        objDic.Add GetTableRows, Join(tmpArray1,strSeparator)
-        UpdateWidths(Join(tmpArray1,strSeparator))
+        'Format Array to fit inside console
+        Dim strNewRow, intIndex
+        For intIndex = 0 to UBound(tmpArray1)
+            If intIndex = 0 Then
+                strNewRow = tmpArray1(intIndex)
+            Else
+                strNewRow = strNewRow + strSeparator + tmpArray1(intIndex)
+            End If
+            If Len(strNewRow) > intConsoleWidth then 
+                strNewRow = Left(strNewRow,intConsoleWidth-3) + "..."
+                Exit For
+            End If
+        Next
+        objDic.Add GetTableRows, strNewRow
+        UpdateWidths(strNewRow)
     End Sub
 
     'Method 2
@@ -174,5 +190,6 @@ With objTable
     .AddRow("5|China| 9999999999999")
     .AddRow("6| EU | 7777777| qwerty")
     .AddRow("7| Portugal | 333x7777777| qwerty")
+    .AddRow("77| Polonia | El pequeño murcielago hindú volaba errante por los cielos hasta que escuchó una voz que lo llamaba desde lejos.")
     .Write
 End With

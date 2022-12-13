@@ -1,38 +1,32 @@
 Option Explicit
-
+  ' Default window size should be 80x25. Table width should not exceed that number.
+  ' If the content of a row is bigger than 80, it should be splitted in more than one row.
 Class ConsoleTable  'Defining the Class
-
+    Private intConsoleWidth ' Width of the actual console window
     Private strSeparator'This is a special character to delimit table cells
     Private strHeads    'This specifies the head of each column
     Private strWidths   'This specifies the len of each cell
     Private strSpacing  'Select 1=Left, 2=Center, 3=Rigth
     Private intRow      'Integer dedicated to rows 
     Private intCol      'Integer dedicated to columns
-    'Private ContentArray(1) 'This is the table
     Private objDic
-      
-    
     Private Sub Class_Initialize( )
+        intConsoleWidth = 80
         strSeparator = "|"
         strHeads     = "n" & strSeparator & "Items"
         strWidths    = "-" & strSeparator & "-----"
         strSpacing   = "1" & strSeparator & "1" 
         Set objDic = WScript.CreateObject("Scripting.Dictionary")
     End Sub
-
     Private Sub Class_Terminate(  )
         Set objDic = Nothing
     End Sub
-
     Public Function GetTableRows 'Max rows value +1 (size of the virtual table)
         GetTableRows = objDic.Count
     End Function
-
     Public Function GetTableCols 'Max columns value +1 (size of the virtual table)  
         GetTableCols = UBound(Split(strHeads,strSeparator)) + 1
     End Function
-
-    'Method 0
     Public Sub SetHeaders(strInput0)
         If UBound(Split(strInput0,strSeparator)) > 0 Then
             strHeads = strInput0
@@ -41,17 +35,26 @@ Class ConsoleTable  'Defining the Class
             SetSpacing(1)
         End If
     End Sub
-
-    ' Method 1
     Public Sub AddRow(strInput1)
         Dim tmpArray1
             tmpArray1 = Split(strInput1,strSeparator)
         Redim Preserve tmpArray1(GetTableCols-1)
-        objDic.Add GetTableRows, Join(tmpArray1,strSeparator)
-        UpdateWidths(Join(tmpArray1,strSeparator))
+        'Format Array to fit inside console
+        Dim strNewRow, intIndex
+        For intIndex = 0 to UBound(tmpArray1)
+            If intIndex = 0 Then
+                strNewRow = tmpArray1(intIndex)
+            Else
+                strNewRow = strNewRow & strSeparator & tmpArray1(intIndex)
+            End If
+            If Len(strNewRow) > intConsoleWidth then 
+                strNewRow = Left(strNewRow,intConsoleWidth-3) + "..."
+                Exit For
+            End If
+        Next
+        objDic.Add GetTableRows, strNewRow
+        UpdateWidths(strNewRow)
     End Sub
-
-    'Method 2
     Public Sub SetSpacing(intInput2)
         Dim strTemp
         For intCol = 0 to GetTableCols - 1
@@ -59,8 +62,6 @@ Class ConsoleTable  'Defining the Class
         Next
         strSpacing = strTemp
     End Sub
-
-    'Method 3
     Private Sub PrintRow(strInput3)
         Dim tmpArray3
             tmpArray3 = Split(strInput3,strSeparator)
@@ -69,8 +70,6 @@ Class ConsoleTable  'Defining the Class
         Next
         WScript.StdOut.Write vbCrLf
     End Sub
-
-    'Method 4
     Private Function GetSpacingMode(intInput4)
         Dim tmpArray4
             tmpArray4 = Split(strSpacing,strSeparator)
@@ -78,28 +77,23 @@ Class ConsoleTable  'Defining the Class
             GetSpacingMode = CInt(tmpArray4(intInput4))
         End If
     End Function
-
-    'Method 5
     Private Function GetSpacedCell(strInput5,intColumnNumber)
         Dim intLSpaces
         Dim intSpaces
         Dim tmpArray5
             tmpArray5 = Split(strWidths,strSeparator)
             strInput5 = Trim(strInput5)
-        intSpaces = Len(tmpArray5(intColumnNumber)) - Len(strInput5)
+        intSpaces  = Len(tmpArray5(intColumnNumber)) - Len(strInput5)
         intLSpaces = CInt(intSpaces/2)
         Select Case GetSpacingMode(intColumnNumber)
             Case 1 'Left
-            GetSpacedCell = strInput5 & Space(intSpaces)
-            Case 2 'Center
-            GetSpacedCell = Space(intLSpaces) & strInput5 & Space(intSpaces - intLSpaces)
+              GetSpacedCell = strInput5 & Space(intSpaces)
             Case 3 'Rigth
-            GetSpacedCell = Space(intSpaces) & strInput5 
-            Case Else
+              GetSpacedCell = Space(intSpaces) & strInput5 
+            Case Else 'Center
+              GetSpacedCell = Space(intLSpaces) & strInput5 & Space(intSpaces - intLSpaces)
         End Select 
     End Function
-
-    'Method 6
     Private Function GetHorizontalRules(strInput6)
         Dim tmpArray6
             tmpArray6 = Split(strInput6,strSeparator)
@@ -108,20 +102,19 @@ Class ConsoleTable  'Defining the Class
         Next
         GetHorizontalRules = Join(tmpArray6,strSeparator)
     End Function
-
-    'Method 7
     Private Sub UpdateWidths(strInput7)
-        Dim tmpArrayWidths : tmpArrayWidths = Split(strWidths,strSeparator)
-        Dim tmpArray7 : tmpArray7 = Split(strInput7,strSeparator)
+        Dim tmpArrayWidths 
+            tmpArrayWidths = Split(strWidths,strSeparator)
+        Dim tmpArray7      
+            tmpArray7      = Split(strInput7,strSeparator)
         For intCol = 0 to UBound(tmpArrayWidths)
             If intCol > UBound(tmpArray7) Then Exit For
-            If Len(tmpArray7(intCol)) > len(tmpArrayWidths(intCol)) Then 
+            If Len(tmpArray7(intCol)) > Len(tmpArrayWidths(intCol)) Then 
                 tmpArrayWidths(intCol) = Trim(tmpArray7(intCol))
             End If
         Next
         strWidths = GetHorizontalRules(Join(tmpArrayWidths,strSeparator)) 
     End Sub
-
     Public Sub Write
         Dim objKey
         PrintRow strHeads                       'Print heads
@@ -130,15 +123,6 @@ Class ConsoleTable  'Defining the Class
             PrintRow objDic(objKey)             'Print row
         Next
     End Sub
-
-    
-
-    
-
-    
-
-    
-
 
     'Public Sub SetCellSpacing(intColumn,intSpacingMode)
         'Validate intSpacingMode
@@ -155,10 +139,6 @@ Class ConsoleTable  'Defining the Class
     '        End If
     '    End If
     'End Sub
-
-    
-    
-
 End Class
 
 ' Instantiation of the Class
@@ -174,5 +154,6 @@ With objTable
     .AddRow("5|China| 9999999999999")
     .AddRow("6| EU | 7777777| qwerty")
     .AddRow("7| Portugal | 333x7777777| qwerty")
+    .AddRow("77| Polonia | El pequeño murcielago hindú volaba errante por los cielos hasta que escuchó una voz que lo llamaba desde lejos.")
     .Write
 End With
